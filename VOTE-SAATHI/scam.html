@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scam Detector - Vote Saathi</title>
+  <meta name="description" content="Simple, safe voting information for everyone.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗳️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">Vote <span>Saathi</span></div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="learn.html">Learn</a>
+      <a href="scam.html">Safety</a>
+      <a href="quiz.html">Quiz</a>
+      <a href="volunteer.html">Volunteer</a>
+      <a href="impact.html">Impact</a>
+    </nav>
+    <a href="index.html" class="easy-btn" style="text-decoration:none">← Back to Home</a>
+  </header>
+<section class="page-hero">
+  <div>
+    <h1>Scam <span>Detector</span></h1>
+    <p>Check if a message or link is real or fake.</p>
+  </div>
+  <div class="art">⚠️</div>
+</section>
+  <section class="scam">
+    <p>Paste a message or link you received and we'll look for warning signs.</p>
+
+    <textarea id="scamInput" rows="6" placeholder="Paste the message or link here..."></textarea>
+    <br>
+    <button id="checkBtn" class="btn btn-orange">Check Now</button>
+
+    <div id="scamResult" hidden>
+      <h3 id="scamVerdict"></h3>
+      <ul id="scamReasons"></ul>
+      <p class="scam-note">
+        This is a simple checker, not a guarantee. Always confirm voting
+        information on the official Election Commission website (eci.gov.in)
+        or by calling the Voter Helpline 1950.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">Vote <span>Saathi</span></div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </footer>
+
+  <script>
+    // Each rule has: a list of words to look for, and a message to show if found
+    const rules = [
+      { words: ["urgent", "immediately", "last chance", "act now", "expires", "within 24 hours", "hurry"],
+        reason: "It creates panic or urgency to make you act without thinking." },
+      { words: ["otp", "password", "pin", "aadhaar", "aadhar", "pan card", "card number", "cvv", "bank account"],
+        reason: "It asks for private details like an OTP, password or ID number. Real election offices never ask for these by message." },
+      { words: ["you won", "winner", "prize", "reward", "lottery", "cashback", "free gift"],
+        reason: "It promises a prize or reward. Voting information is free." },
+      { words: ["pay", "fee", "payment", "send money", "upi"],
+        reason: "It asks for money. Voter registration and voter ID services are free." },
+      { words: [".apk", "install this app", "download this app"],
+        reason: "It asks you to install an app from outside the official app store." },
+      { words: ["forward this", "share with 10", "send to all"],
+        reason: "It asks you to forward it to many people, which is common in fake messages." },
+      { words: ["bit.ly", "tinyurl", "t.co/", "cutt.ly", "is.gd", "shorturl"],
+        reason: "It uses a shortened link that hides where it really goes." }
+    ];
+
+    // Matches whole words only, so "pin" does not match "shipping"
+    function hasWord(text, word) {
+      if (/^[a-z0-9 ]+$/.test(word)) {
+        return new RegExp("\\b" + word + "\\b").test(text);
+      }
+      return text.includes(word);   // for things like ".apk" or "bit.ly"
+    }
+
+    function checkMessage() {
+      const text = document.getElementById("scamInput").value.toLowerCase().trim();
+      if (text === "") {
+        alert("Please paste a message or link first.");
+        return;
+      }
+
+      const found = [];  // the warning signs we find
+
+      // Go through each rule and see if any of its words appear in the text
+      rules.forEach(function (rule) {
+        const hit = rule.words.some(function (word) { return hasWord(text, word); });
+        if (hit) found.push(rule.reason);
+      });
+
+      // Check any web address in the text: official sites end in .gov.in or .nic.in
+      const links = text.match(/https?:\/\/[^\s]+/g) || [];
+      const warn = "The link is not an official government address (.gov.in or .nic.in).";
+      links.forEach(function (link) {
+        let host = "";
+        try { host = new URL(link.replace(/[.,;)!?]+$/, "")).hostname; } catch (e) {}
+        const official = host.endsWith(".gov.in") || host.endsWith(".nic.in");
+        if (!official && !found.includes(warn)) found.push(warn);
+      });
+
+      showResult(found);
+    }
+
+    function showResult(found) {
+      const verdict = document.getElementById("scamVerdict");
+      const list = document.getElementById("scamReasons");
+      list.innerHTML = "";  // clear the old list
+
+      if (found.length === 0) {
+        verdict.textContent = "✅ No obvious warning signs found";
+        verdict.style.color = "#167a3a";
+        const li = document.createElement("li");
+        li.textContent = "Still, don't share personal details. Confirm on the official website if unsure.";
+        list.appendChild(li);
+      } else {
+        if (found.length >= 3) {
+          verdict.textContent = "🚨 Very likely a scam";
+          verdict.style.color = "#c62828";
+        } else {
+          verdict.textContent = "⚠️ Be careful. This looks suspicious";
+          verdict.style.color = "#E8590C";
+        }
+        found.forEach(function (reason) {
+          const li = document.createElement("li");
+          li.textContent = reason;
+          list.appendChild(li);
+        });
+      }
+
+      document.getElementById("scamResult").hidden = false;
+    }
+
+    document.getElementById("checkBtn").addEventListener("click", checkMessage);
+  </script>
+<script src="easy.js"></script>
+</body>
+</html>
